@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "draw-destiny",
+    "name": "Draw Destiny",
     "slug": "draw-destiny",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "drawdestiny",
+    "scheme": "draw-destiny",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
