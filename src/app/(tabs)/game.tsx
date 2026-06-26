@@ -29,7 +29,7 @@ export default function GameScreen() {
     <View style={styles.container}>
       <QuestionPicker decks={DECKS} selectedId={selectedDeckId} onSelect={setSelectedDeckId} />
       {selectedDeck ? (
-        <CardCarousel deck={shuffledCards} onDrawActive={handleDraw} tiltEnabled={drawnCard === null} />
+        <CardCarousel key={selectedDeckId} deck={shuffledCards} onDrawActive={handleDraw} tiltEnabled={drawnCard === null} />
       ) : (
         <View style={styles.body}>
           <Text style={styles.text}>질문을 골라 운명을 뽑으세요</Text>
