@@ -29,6 +29,8 @@ const LIFT = CARD_H / 2; // 선택 카드 상승량: 솟은 카드 세로 중앙
 const ACTIVE_SCALE = 1.08;
 const RISE_DELAY = 140; // 새 선택 카드가 올라오기까지의 텀(ms)
 const SPRING = { damping: 16, stiffness: 140 };
+// 회전축(부채꼴 피벗)을 카드 아래로 내릴수록 같은 각도에서 반경이 커져 가로로 더 벌어진다.
+const FAN_PIVOT = "50% 150%";
 
 export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
   const [windowStart, setWindowStart] = useState(0);
@@ -97,8 +99,8 @@ function CarouselCard({
 
   const animatedStyle = useAnimatedStyle(() => ({
     // 애니메이션 transform이 적용될 때 StyleSheet의 transformOrigin이 무시되므로
-    // 여기서 함께 반환해 회전축을 아래 중앙으로 고정한다.
-    transformOrigin: "50% 100%",
+    // 여기서 함께 반환해 회전축을 고정한다.
+    transformOrigin: FAN_PIVOT,
     transform: [
       { rotate: `${angle.value}deg` },
       { translateY: lift.value },
@@ -134,7 +136,7 @@ const styles = StyleSheet.create({
     marginLeft: -CARD_W / 2,
     width: CARD_W,
     height: CARD_H,
-    transformOrigin: "50% 100%", // 아래 중앙을 공유 회전축으로 부채꼴 펼침
+    transformOrigin: FAN_PIVOT, // 카드 아래 한 점을 공유 회전축으로 부채꼴 펼침
   },
   card: {
     width: CARD_W,
