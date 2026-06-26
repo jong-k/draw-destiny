@@ -8,16 +8,17 @@ import { useTilt } from "@/hooks/useTilt";
 interface Props {
   deck: Card[];
   onDrawActive: (card: Card) => void;
+  tiltEnabled: boolean;
 }
 
 const CENTER_SLOT = Math.floor(WINDOW_SIZE / 2); // 2
 
-export function CardCarousel({ deck, onDrawActive }: Props) {
+export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
   const [windowStart, setWindowStart] = useState(0);
   const moveWindow = (direction: 1 | -1) =>
     setWindowStart((s) => step(s, direction, deck.length));
 
-  useTilt(moveWindow, true);
+  useTilt(moveWindow, tiltEnabled);
 
   const visible = getWindow(deck, windowStart);
   const activeCard = deck[activeCardIndex(windowStart, deck.length)];
