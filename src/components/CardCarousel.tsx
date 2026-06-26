@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
+  FadeIn,
+  FadeOut,
   useAnimatedStyle,
+  withDelay,
   withSpring,
 } from "react-native-reanimated";
 
@@ -17,6 +20,15 @@ interface Props {
 
 const CENTER_SLOT = Math.floor(WINDOW_SIZE / 2); // 2
 
+// 부채꼴 배치/애니메이션 상수 (실기기에서 조정 가능)
+const CARD_W = 84;
+const CARD_H = 126;
+const SLOT_ANGLES = [-44, -22, 0, 22, 44]; // 왼→오 슬롯별 회전각(deg)
+const LIFT = CARD_H / 2; // 선택 카드 상승량: 솟은 카드 세로 중앙 = 미상승 카드 윗면
+const ACTIVE_SCALE = 1.08;
+const RISE_DELAY = 140; // 새 선택 카드가 올라오기까지의 텀(ms)
+const SPRING = { damping: 16, stiffness: 140 };
+
 export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
   const [windowStart, setWindowStart] = useState(0);
   const moveWindow = (direction: 1 | -1) =>
@@ -29,10 +41,11 @@ export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.cardRow}>
+      <View style={styles.fanArea}>
         {visible.map((card, slot) => (
           <CarouselCard
-            key={`${card.id}-${slot}`}
+            key={card.id}
+            slot={slot}
             isActive={slot === CENTER_SLOT}
             onPress={() => slot === CENTER_SLOT && onDrawActive(activeCard)}
           />
@@ -53,42 +66,64 @@ export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
 }
 
 function CarouselCard({
+  slot,
   isActive,
   onPress,
 }: {
+  slot: number;
   isActive: boolean;
   onPress: () => void;
 }) {
+  // 비활성 카드의 lift는 즉시 0으로 내려가고, 활성 카드만 RISE_DELAY 뒤 올라가
+  // "이전 카드 내림 → 텀 → 새 카드 올림" 순차 연출이 만들어진다.
   const animatedStyle = useAnimatedStyle(() => ({
+    zIndex: slot, // 왼쪽(0) 아래 → 오른쪽(4) 위로 쌓임
     transform: [
-      { translateY: withSpring(isActive ? -28 : 0) },
-      { scale: withSpring(isActive ? 1.12 : 0.92) },
+      { rotate: `${withSpring(SLOT_ANGLES[slot], SPRING)}deg` },
+      {
+        translateY: withDelay(
+          isActive ? RISE_DELAY : 0,
+          withSpring(isActive ? -LIFT : 0, SPRING),
+        ),
+      },
+      { scale: withSpring(isActive ? ACTIVE_SCALE : 1, SPRING) },
     ],
   }));
 
   return (
-    <Pressable onPress={onPress} disabled={!isActive}>
-      <Animated.View
-        style={[styles.card, isActive && styles.cardActive, animatedStyle]}
-      >
-        <Text style={styles.cardBack}>🔮</Text>
-      </Animated.View>
-    </Pressable>
+    <Animated.View
+      entering={FadeIn.duration(220)}
+      exiting={FadeOut.duration(160)}
+      style={[styles.cardWrap, animatedStyle]}
+    >
+      <Pressable onPress={onPress} disabled={!isActive}>
+        <View style={[styles.card, isActive && styles.cardActive]}>
+          <Text style={styles.cardBack}>🔮</Text>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center" },
-  cardRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: -8,
+  fanArea: {
+    height: 300,
+    width: "100%",
+  },
+  cardWrap: {
+    position: "absolute",
+    bottom: 0,
+    left: "50%",
+    marginLeft: -CARD_W / 2,
+    width: CARD_W,
+    height: CARD_H,
+    transformOrigin: "50% 100%", // 아래 중앙을 공유 회전축으로 부채꼴 펼침
   },
   card: {
-    width: 64,
-    height: 96,
-    borderRadius: 12,
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: 14,
     backgroundColor: "#2A2342",
     alignItems: "center",
     justifyContent: "center",
@@ -103,7 +138,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
   },
-  cardBack: { fontSize: 28 },
+  cardBack: { fontSize: 34 },
   controls: {
     flexDirection: "row",
     alignItems: "center",
