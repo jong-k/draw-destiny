@@ -23,7 +23,7 @@ export function QuestionPicker({ decks, selectedId, onSelect }: Props) {
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={styles.sheet}>
+          <View style={styles.sheet} onStartShouldSetResponder={() => true}>
             <FlatList
               data={decks}
               keyExtractor={(d) => d.id}
