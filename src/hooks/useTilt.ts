@@ -12,7 +12,11 @@ export function useTilt(
   const smoothed = useRef(0);
   const armed = useRef(true);
   const onStepRef = useRef(onStep);
-  onStepRef.current = onStep;
+
+  // 렌더 중 ref 쓰기를 피하고, 커밋 이후 effect에서 최신 콜백을 동기화
+  useEffect(() => {
+    onStepRef.current = onStep;
+  });
 
   useEffect(() => {
     if (!enabled) return;
