@@ -1,5 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loadCollection, addToCollection, COLLECTION_KEY } from "@/lib/collection";
+
+import {
+  addToCollection,
+  COLLECTION_KEY,
+  loadCollection,
+} from "@/lib/collection";
 
 beforeEach(async () => {
   await AsyncStorage.clear();

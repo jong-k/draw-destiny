@@ -1,8 +1,8 @@
 import {
+  activeCardIndex,
+  getWindow,
   shuffle,
   step,
-  getWindow,
-  activeCardIndex,
   WINDOW_SIZE,
 } from "@/lib/deck";
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+
 import { CardCarousel } from "@/components/CardCarousel";
 import { DrawnCard } from "@/components/DrawnCard";
 import { QuestionPicker } from "@/components/QuestionPicker";
@@ -27,15 +28,26 @@ export default function GameScreen() {
 
   return (
     <View style={styles.container}>
-      <QuestionPicker decks={DECKS} selectedId={selectedDeckId} onSelect={setSelectedDeckId} />
+      <QuestionPicker
+        decks={DECKS}
+        selectedId={selectedDeckId}
+        onSelect={setSelectedDeckId}
+      />
       {selectedDeck ? (
-        <CardCarousel key={selectedDeckId} deck={shuffledCards} onDrawActive={handleDraw} tiltEnabled={drawnCard === null} />
+        <CardCarousel
+          key={selectedDeckId}
+          deck={shuffledCards}
+          onDrawActive={handleDraw}
+          tiltEnabled={drawnCard === null}
+        />
       ) : (
         <View style={styles.body}>
           <Text style={styles.text}>질문을 골라 운명을 뽑으세요</Text>
         </View>
       )}
-      {drawnCard && <DrawnCard card={drawnCard} onClose={() => setDrawnCard(null)} />}
+      {drawnCard && (
+        <DrawnCard card={drawnCard} onClose={() => setDrawnCard(null)} />
+      )}
     </View>
   );
 }
@@ -43,5 +55,10 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0E0B1A" },
   body: { flex: 1, alignItems: "center", justifyContent: "center" },
-  text: { color: "#F4EAD5", fontSize: 18, textAlign: "center", paddingHorizontal: 24 },
+  text: {
+    color: "#F4EAD5",
+    fontSize: 18,
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
 });

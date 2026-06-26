@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+
+import { useTilt } from "@/hooks/useTilt";
 import { activeCardIndex, getWindow, step, WINDOW_SIZE } from "@/lib/deck";
 import type { Card } from "@/types/deck";
-import { useTilt } from "@/hooks/useTilt";
 
 interface Props {
   deck: Card[];
@@ -48,7 +52,13 @@ export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
   );
 }
 
-function CarouselCard({ isActive, onPress }: { isActive: boolean; onPress: () => void }) {
+function CarouselCard({
+  isActive,
+  onPress,
+}: {
+  isActive: boolean;
+  onPress: () => void;
+}) {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateY: withSpring(isActive ? -28 : 0) },
@@ -58,7 +68,9 @@ function CarouselCard({ isActive, onPress }: { isActive: boolean; onPress: () =>
 
   return (
     <Pressable onPress={onPress} disabled={!isActive}>
-      <Animated.View style={[styles.card, isActive && styles.cardActive, animatedStyle]}>
+      <Animated.View
+        style={[styles.card, isActive && styles.cardActive, animatedStyle]}
+      >
         <Text style={styles.cardBack}>🔮</Text>
       </Animated.View>
     </Pressable>
@@ -67,7 +79,12 @@ function CarouselCard({ isActive, onPress }: { isActive: boolean; onPress: () =>
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center" },
-  cardRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: -8 },
+  cardRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: -8,
+  },
   card: {
     width: 64,
     height: 96,
@@ -78,10 +95,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#3D3460",
   },
-  cardActive: { backgroundColor: "#3A2E5C", borderColor: "#7C5CFF", shadowColor: "#7C5CFF", shadowOpacity: 0.6, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  cardActive: {
+    backgroundColor: "#3A2E5C",
+    borderColor: "#7C5CFF",
+    shadowColor: "#7C5CFF",
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
   cardBack: { fontSize: 28 },
-  controls: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, marginTop: 48 },
-  arrow: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#1C1730", alignItems: "center", justifyContent: "center" },
+  controls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    marginTop: 48,
+  },
+  arrow: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#1C1730",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   arrowText: { color: "#F4EAD5", fontSize: 20 },
   hint: { color: "#B9A6E0", fontSize: 12, flex: 1, textAlign: "center" },
 });

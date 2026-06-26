@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
 import type { Deck } from "@/types/deck";
 
 interface Props {
@@ -21,7 +29,12 @@ export function QuestionPicker({ decks, selectedId, onSelect }: Props) {
         <Text style={styles.chevron}>▾</Text>
       </Pressable>
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(false)}
+      >
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
           <View style={styles.sheet} onStartShouldSetResponder={() => true}>
             <FlatList
@@ -59,8 +72,18 @@ const styles = StyleSheet.create({
   },
   triggerText: { color: "#F4EAD5", fontSize: 16 },
   chevron: { color: "#B9A6E0", fontSize: 16 },
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 24 },
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 24,
+  },
   sheet: { backgroundColor: "#1C1730", borderRadius: 16, overflow: "hidden" },
-  row: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#332B4D" },
+  row: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#332B4D",
+  },
   rowText: { color: "#F4EAD5", fontSize: 16 },
 });

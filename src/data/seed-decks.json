@@ -3,26 +3,62 @@
     "id": "caution-today",
     "question": "오늘 조심해야 할 것은?",
     "cards": [
-      { "id": "caution-1", "text": "말보다 행동을 앞세우지 마세요", "symbol": "🌙" },
+      {
+        "id": "caution-1",
+        "text": "말보다 행동을 앞세우지 마세요",
+        "symbol": "🌙"
+      },
       { "id": "caution-2", "text": "서두르면 놓칩니다", "symbol": "🐢" },
       { "id": "caution-3", "text": "직감을 믿으세요", "symbol": "✨" },
-      { "id": "caution-4", "text": "작은 약속을 가볍게 여기지 마세요", "symbol": "🪶" },
-      { "id": "caution-5", "text": "지갑과 마음을 동시에 단속하세요", "symbol": "🔒" },
-      { "id": "caution-6", "text": "익숙한 길에서 방심하지 마세요", "symbol": "🛤️" },
+      {
+        "id": "caution-4",
+        "text": "작은 약속을 가볍게 여기지 마세요",
+        "symbol": "🪶"
+      },
+      {
+        "id": "caution-5",
+        "text": "지갑과 마음을 동시에 단속하세요",
+        "symbol": "🔒"
+      },
+      {
+        "id": "caution-6",
+        "text": "익숙한 길에서 방심하지 마세요",
+        "symbol": "🛤️"
+      },
       { "id": "caution-7", "text": "화는 하루만 묵혀 두세요", "symbol": "🔥" },
-      { "id": "caution-8", "text": "남의 말보다 내 기준을 보세요", "symbol": "🧭" }
+      {
+        "id": "caution-8",
+        "text": "남의 말보다 내 기준을 보세요",
+        "symbol": "🧭"
+      }
     ]
   },
   {
     "id": "luck-today",
     "question": "오늘의 행운은?",
     "cards": [
-      { "id": "luck-1", "text": "예상치 못한 좋은 소식이 옵니다", "symbol": "🍀" },
+      {
+        "id": "luck-1",
+        "text": "예상치 못한 좋은 소식이 옵니다",
+        "symbol": "🍀"
+      },
       { "id": "luck-2", "text": "오래된 인연이 도움을 줍니다", "symbol": "🤝" },
-      { "id": "luck-3", "text": "작은 지출이 큰 기쁨이 됩니다", "symbol": "🎁" },
-      { "id": "luck-4", "text": "용기를 낸 만큼 보상이 따릅니다", "symbol": "⭐" },
+      {
+        "id": "luck-3",
+        "text": "작은 지출이 큰 기쁨이 됩니다",
+        "symbol": "🎁"
+      },
+      {
+        "id": "luck-4",
+        "text": "용기를 낸 만큼 보상이 따릅니다",
+        "symbol": "⭐"
+      },
       { "id": "luck-5", "text": "잃어버린 것을 되찾습니다", "symbol": "🔑" },
-      { "id": "luck-6", "text": "오늘의 미소가 행운을 부릅니다", "symbol": "😊" },
+      {
+        "id": "luck-6",
+        "text": "오늘의 미소가 행운을 부릅니다",
+        "symbol": "😊"
+      },
       { "id": "luck-7", "text": "기다리던 답장이 도착합니다", "symbol": "📩" },
       { "id": "luck-8", "text": "우연이 기회로 바뀝니다", "symbol": "🎲" }
     ]

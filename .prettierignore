@@ -10,3 +10,8 @@ pnpm-lock.yaml
 .agents
 .superpowers
 .claude
+
+# generated docs / assets / package manager files
+docs
+assets
+pnpm-workspace.yaml
