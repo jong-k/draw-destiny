@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withSpring,
+  withTiming,
+  type SharedValue,
 } from "react-native-reanimated";
 
 import { useTilt } from "@/hooks/useTilt";
@@ -17,6 +21,8 @@ interface Props {
   deck: Card[];
   onDrawActive: (card: Card) => void;
   tiltEnabled: boolean;
+  /** 값이 바뀔 때마다 "모았다 다시 펼치기" 셔플 연출을 1회 재생한다. */
+  shuffleNonce: number;
 }
 
 const CENTER_SLOT = Math.floor(WINDOW_SIZE / 2); // 2
@@ -32,35 +38,105 @@ const SPRING = { damping: 16, stiffness: 140 };
 // 회전축(부채꼴 피벗)을 카드 아래로 내릴수록 같은 각도에서 반경이 커져 가로로 더 벌어진다.
 const FAN_PIVOT = "50% 150%";
 
-export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
+// 셔플 연출 타이밍/세기
+const COLLAPSE_MS = 200; // 부채꼴 → 가운데 더미로 모으는 시간
+const WIGGLE_PX = 10; // 모인 더미를 좌우로 흔드는 폭
+const WIGGLE_MS = 70; // 흔들기 한 스텝 시간
+
+export function CardCarousel({
+  deck,
+  onDrawActive,
+  tiltEnabled,
+  shuffleNonce,
+}: Props) {
+  // 화면에 실제 렌더 중인 덱. 셔플 시 collapse가 끝난 뒤에야 새 순서로 교체한다.
+  const [displayDeck, setDisplayDeck] = useState(deck);
   const [windowStart, setWindowStart] = useState(0);
-  const moveWindow = (direction: 1 | -1) =>
-    setWindowStart((s) => step(s, direction, deck.length));
+  const [isShuffling, setIsShuffling] = useState(false);
 
-  useTilt(moveWindow, tiltEnabled);
+  // 0=완전히 펼침, 1=가운데 한 더미로 모임. 모든 카드 transform이 이 값으로 보간된다.
+  const collapse = useSharedValue(0);
+  const wiggle = useSharedValue(0); // 모인 더미의 좌우 흔들기(px)
 
-  const visible = getWindow(deck, windowStart);
-  const activeCard = deck[activeCardIndex(windowStart, deck.length)];
+  const moveWindow = (direction: 1 | -1) => {
+    if (isShuffling) return;
+    setWindowStart((s) => step(s, direction, displayDeck.length));
+  };
+
+  useTilt(moveWindow, tiltEnabled && !isShuffling);
+
+  // shuffleNonce 변화 → 셔플 연출 1회 재생. 초기 마운트는 무시한다.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const nextDeck = deck; // collapse 완료 후 채택할 새 순서
+    setIsShuffling(true);
+
+    // 4) collapse를 풀어 새 순서로 다시 부채꼴 전개 → 종료 시 입력 잠금 해제
+    const refan = () => {
+      setDisplayDeck(nextDeck);
+      setWindowStart(0);
+      collapse.value = withSpring(0, SPRING, (finished) => {
+        if (finished) runOnJS(setIsShuffling)(false);
+      });
+    };
+
+    // 1) 가운데로 모음 → 2) 좌우로 흔듦 → 3) 새 덱 채택(refan)
+    collapse.value = withTiming(1, { duration: COLLAPSE_MS }, (collapsed) => {
+      if (!collapsed) return;
+      wiggle.value = withSequence(
+        withTiming(WIGGLE_PX, { duration: WIGGLE_MS }),
+        withTiming(-WIGGLE_PX, { duration: WIGGLE_MS }),
+        withTiming(0, { duration: WIGGLE_MS }, (done) => {
+          if (done) runOnJS(refan)();
+        }),
+      );
+    });
+    // deck는 shuffleNonce와 동시에만 바뀌므로 nonce만으로 트리거한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shuffleNonce]);
+
+  const visible = getWindow(displayDeck, windowStart);
+  const activeCard =
+    displayDeck[activeCardIndex(windowStart, displayDeck.length)];
+
+  const fanStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: wiggle.value }],
+  }));
 
   return (
     <View style={styles.container}>
-      <View style={styles.fanArea}>
+      <Animated.View style={[styles.fanArea, fanStyle]}>
         {visible.map((card, slot) => (
           <CarouselCard
             key={card.id}
             slot={slot}
             isActive={slot === CENTER_SLOT}
-            onPress={() => slot === CENTER_SLOT && onDrawActive(activeCard)}
+            collapse={collapse}
+            onPress={() =>
+              !isShuffling && slot === CENTER_SLOT && onDrawActive(activeCard)
+            }
           />
         ))}
-      </View>
+      </Animated.View>
 
       <View style={styles.controls}>
-        <Pressable style={styles.arrow} onPress={() => moveWindow(-1)}>
+        <Pressable
+          style={styles.arrow}
+          disabled={isShuffling}
+          onPress={() => moveWindow(-1)}
+        >
           <Text style={styles.arrowText}>◀</Text>
         </Pressable>
         <Text style={styles.hint}>기울이거나 화살표로 카드를 넘기세요</Text>
-        <Pressable style={styles.arrow} onPress={() => moveWindow(1)}>
+        <Pressable
+          style={styles.arrow}
+          disabled={isShuffling}
+          onPress={() => moveWindow(1)}
+        >
           <Text style={styles.arrowText}>▶</Text>
         </Pressable>
       </View>
@@ -71,10 +147,12 @@ export function CardCarousel({ deck, onDrawActive, tiltEnabled }: Props) {
 function CarouselCard({
   slot,
   isActive,
+  collapse,
   onPress,
 }: {
   slot: number;
   isActive: boolean;
+  collapse: SharedValue<number>;
   onPress: () => void;
 }) {
   // 비활성 카드의 lift는 즉시 0으로 내려가고, 활성 카드만 RISE_DELAY 뒤 올라가
@@ -97,16 +175,20 @@ function CarouselCard({
     scale.value = withSpring(isActive ? ACTIVE_SCALE : 1, SPRING);
   }, [isActive, lift, scale]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    // 애니메이션 transform이 적용될 때 StyleSheet의 transformOrigin이 무시되므로
-    // 여기서 함께 반환해 회전축을 고정한다.
-    transformOrigin: FAN_PIVOT,
-    transform: [
-      { rotate: `${angle.value}deg` },
-      { translateY: lift.value },
-      { scale: scale.value },
-    ],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    // collapse(0→1)가 커질수록 부채꼴 변형을 0으로 수렴시켜 가운데 한 더미로 모은다.
+    const f = 1 - collapse.value;
+    return {
+      // 애니메이션 transform이 적용될 때 StyleSheet의 transformOrigin이 무시되므로
+      // 여기서 함께 반환해 회전축을 고정한다.
+      transformOrigin: FAN_PIVOT,
+      transform: [
+        { rotate: `${angle.value * f}deg` },
+        { translateY: lift.value * f },
+        { scale: 1 + (scale.value - 1) * f },
+      ],
+    };
+  });
 
   return (
     <Animated.View
