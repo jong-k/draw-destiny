@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
   useAnimatedStyle,
+  useSharedValue,
   withDelay,
   withSpring,
 } from "react-native-reanimated";
@@ -76,17 +77,32 @@ function CarouselCard({
 }) {
   // 비활성 카드의 lift는 즉시 0으로 내려가고, 활성 카드만 RISE_DELAY 뒤 올라가
   // "이전 카드 내림 → 텀 → 새 카드 올림" 순차 연출이 만들어진다.
+  // 초기값을 목표값으로 둬 마운트 시 곧장 부채꼴이 되고, 슬롯/활성 변화 시에만 애니메이션.
+  const angle = useSharedValue(SLOT_ANGLES[slot]);
+  const lift = useSharedValue(isActive ? -LIFT : 0);
+  const scale = useSharedValue(isActive ? ACTIVE_SCALE : 1);
+
+  useEffect(() => {
+    angle.value = withSpring(SLOT_ANGLES[slot], SPRING);
+  }, [slot, angle]);
+
+  useEffect(() => {
+    // 비활성 lift는 즉시 0으로, 활성 lift만 RISE_DELAY 뒤 올라가 "내림→텀→올림" 순차.
+    lift.value = withDelay(
+      isActive ? RISE_DELAY : 0,
+      withSpring(isActive ? -LIFT : 0, SPRING),
+    );
+    scale.value = withSpring(isActive ? ACTIVE_SCALE : 1, SPRING);
+  }, [isActive, lift, scale]);
+
   const animatedStyle = useAnimatedStyle(() => ({
-    zIndex: slot, // 왼쪽(0) 아래 → 오른쪽(4) 위로 쌓임
+    // 애니메이션 transform이 적용될 때 StyleSheet의 transformOrigin이 무시되므로
+    // 여기서 함께 반환해 회전축을 아래 중앙으로 고정한다.
+    transformOrigin: "50% 100%",
     transform: [
-      { rotate: `${withSpring(SLOT_ANGLES[slot], SPRING)}deg` },
-      {
-        translateY: withDelay(
-          isActive ? RISE_DELAY : 0,
-          withSpring(isActive ? -LIFT : 0, SPRING),
-        ),
-      },
-      { scale: withSpring(isActive ? ACTIVE_SCALE : 1, SPRING) },
+      { rotate: `${angle.value}deg` },
+      { translateY: lift.value },
+      { scale: scale.value },
     ],
   }));
 
@@ -94,7 +110,7 @@ function CarouselCard({
     <Animated.View
       entering={FadeIn.duration(220)}
       exiting={FadeOut.duration(160)}
-      style={[styles.cardWrap, animatedStyle]}
+      style={[styles.cardWrap, { zIndex: slot }, animatedStyle]}
     >
       <Pressable onPress={onPress} disabled={!isActive}>
         <View style={[styles.card, isActive && styles.cardActive]}>
