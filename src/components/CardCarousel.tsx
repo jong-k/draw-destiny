@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { activeCardIndex, getWindow, step, WINDOW_SIZE } from "@/lib/deck";
 import type { Card } from "@/types/deck";
+import { useTilt } from "@/hooks/useTilt";
 
 interface Props {
   deck: Card[];
@@ -13,6 +14,11 @@ const CENTER_SLOT = Math.floor(WINDOW_SIZE / 2); // 2
 
 export function CardCarousel({ deck, onDrawActive }: Props) {
   const [windowStart, setWindowStart] = useState(0);
+  const moveWindow = (direction: 1 | -1) =>
+    setWindowStart((s) => step(s, direction, deck.length));
+
+  useTilt(moveWindow, true);
+
   const visible = getWindow(deck, windowStart);
   const activeCard = deck[activeCardIndex(windowStart, deck.length)];
 
@@ -29,11 +35,11 @@ export function CardCarousel({ deck, onDrawActive }: Props) {
       </View>
 
       <View style={styles.controls}>
-        <Pressable style={styles.arrow} onPress={() => setWindowStart((s) => step(s, -1, deck.length))}>
+        <Pressable style={styles.arrow} onPress={() => moveWindow(-1)}>
           <Text style={styles.arrowText}>◀</Text>
         </Pressable>
         <Text style={styles.hint}>기울이거나 화살표로 카드를 넘기세요</Text>
-        <Pressable style={styles.arrow} onPress={() => setWindowStart((s) => step(s, 1, deck.length))}>
+        <Pressable style={styles.arrow} onPress={() => moveWindow(1)}>
           <Text style={styles.arrowText}>▶</Text>
         </Pressable>
       </View>
