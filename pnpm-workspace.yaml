@@ -1,2 +1,3 @@
 allowBuilds:
-  - unrs-resolver
+  '0': unrs-resolver
+  unrs-resolver: true

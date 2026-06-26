@@ -1,0 +1,12 @@
+dist
+node_modules
+.expo
+android
+ios
+*.lock
+pnpm-lock.yaml
+
+# tooling / scaffolding (not project source)
+.agents
+.superpowers
+.claude
