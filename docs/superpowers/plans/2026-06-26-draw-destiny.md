@@ -1348,13 +1348,88 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
+### Task 12: 부채꼴 배치 + 선택 카드 전환 애니메이션 (CardCarousel 리팩토링)
+
+> Expo Go에서 동작(Reanimated만 사용). Task 7에서 만든 평면 가로줄 캐러셀을 **부채꼴**로 바꾸고, 선택(가운데) 카드 교체 시 "이전 카드 내림 → **약간의 텀** → 새 카드 올림" 연출을 추가한다. 설계 문서 `2단계 — 덱(부채꼴 캐러셀)` 및 `전환 애니메이션` 절 참고.
+
+**Files:**
+- Modify: `src/components/CardCarousel.tsx`
+
+**Interfaces:**
+- 기존 props(`deck`, `onDrawActive`, `tiltEnabled`)와 `windowStart`/`useTilt`/`step`/`activeCardIndex`/`getWindow` 연동은 **그대로 유지**(선택은 항상 윈도우 가운데).
+- 레이아웃/애니메이션 상수를 컴포넌트 상단에 분리: `SLOT_ANGLES`, `LIFT`(= 카드 높이 절반), `ACTIVE_SCALE`, `RISE_DELAY`(텀 ~140ms), spring 설정.
+
+- [ ] **Step 1: 레이아웃/애니메이션 상수 정의**
+
+`CardCarousel.tsx` 상단에 추가:
+```tsx
+const CARD_W = 84;
+const CARD_H = 126;
+const SLOT_ANGLES = [-44, -22, 0, 22, 44]; // 왼→오 회전각(deg)
+const LIFT = CARD_H / 2;                    // 선택 카드 상승량(솟은 카드 세로 중앙 = 미상승 카드 윗면)
+const ACTIVE_SCALE = 1.08;
+const RISE_DELAY = 140;                     // 새 선택 카드 상승 텀(ms)
+const SPRING = { damping: 16, stiffness: 140 };
+```
+
+- [ ] **Step 2: 카드 id 기반 렌더로 전환 (부채꼴이 살아있는 채 슬라이드)**
+
+슬롯 기반 key(`${card.id}-${slot}`)를 **카드 id 기반**으로 바꿔 같은 카드가 슬롯을 옮겨가며 이동하게 한다. `getWindow`로 얻은 5장을 `card.id`로 key 지정하고, 각 카드에 자신의 슬롯 인덱스(`slot`)와 활성 여부(`slot === CENTER_SLOT`)를 전달.
+
+- [ ] **Step 3: 부채꼴 transform 적용 (회전 + z-순서 + lift)**
+
+`CarouselCard`를 절대 위치로 겹쳐 놓고(모두 같은 위치) `transformOrigin`을 아래 중앙으로 두어 회전축을 공유한다. RN 0.81/Reanimated 4의 `transformOrigin` 사용(v56 문서에서 지원 확인; 미지원 시 translate+rotate 수동 합성으로 폴백).
+```tsx
+const animatedStyle = useAnimatedStyle(() => ({
+  transformOrigin: "50% 100%",
+  zIndex: slot,                       // 왼쪽(0) 아래 → 오른쪽(4) 위
+  transform: [
+    { rotate: `${withSpring(SLOT_ANGLES[slot], SPRING)}deg` },
+    { translateY: withDelay(isActive ? RISE_DELAY : 0, withSpring(isActive ? -LIFT : 0, SPRING)) },
+    { scale: withSpring(isActive ? ACTIVE_SCALE : 1, SPRING) },
+  ],
+}));
+```
+> 핵심: 비활성 카드의 lift는 `withDelay(0, ...)`로 **즉시** 0으로 내려가고, 활성 카드의 lift만 `RISE_DELAY` 후 올라가 "내림 → 텀 → 올림" 순서가 만들어진다.
+
+- [ ] **Step 4: 진입/이탈 페이드 (윈도우 경계)**
+
+윈도우 이동 시 새로 들어온 카드는 페이드 인, 나간 카드는 페이드 아웃되도록 `Animated.View`에 `entering={FadeIn}` `exiting={FadeOut}` 적용(`react-native-reanimated`).
+
+- [ ] **Step 5: 카드 크기/컨테이너 정렬 보정**
+
+`styles.card`의 `width/height`를 `CARD_W/CARD_H`로 맞추고, 부채꼴이 화면 가운데 정렬되며 솟은 카드 상단이 잘리지 않도록 컨테이너 높이/패딩 조정. 기존 `cardRow`의 `flexDirection: row`/`gap` 레이아웃은 절대 위치 겹침으로 대체.
+
+- [ ] **Step 6: 타입체크 + 실기기 검증**
+
+Run: `pnpm exec tsc --noEmit`
+Expected: 에러 없음.
+
+실기기/Expo Go에서: 5장이 부채꼴(±44°)로 펼쳐지고 맨 오른쪽 카드가 완전히 보임. 가운데 카드가 상단 절반이 보이게 솟음. 좌우 기울임/화살표로 부채꼴이 한 칸씩 스르르 회전하며, 이전 중앙 카드가 내려간 뒤 약간의 텀을 두고 새 중앙 카드가 올라오는지 확인. 가운데 카드 탭 → 뽑기/플립 정상 동작.
+
+- [ ] **Step 7: 커밋**
+
+```bash
+git add src/components/CardCarousel.tsx
+git commit -m "feat(carousel): 카드 덱 부채꼴 배치 및 선택 전환 애니메이션 추가
+
+5장을 아래 피벗 기준 부채꼴로 펼치고(왼쪽 아래~오른쪽 위 z-순서),
+선택 카드는 높이 절반만큼 솟음. 카드 id 기반 렌더로 한 칸 회전 슬라이드와
+이전 카드 내림→텀→새 카드 올림 순차 연출 구현.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+---
+
 ## 검증 요약
 
 - 순수 로직(Task 3, 4): `npm test` 자동 검증.
-- UI/제스처/센서/애니메이션(Task 5~10): `npx tsc --noEmit` + Expo Go 실행 검증.
+- UI/제스처/센서/애니메이션(Task 5~10, 12): `npx tsc --noEmit` + Expo Go 실행 검증.
 - Rive(Task 11): development build 실행 검증.
 
 ## 단계별 의존 관계
 
 Task 1 → 2 → (3, 4 병렬 가능) → 5 → 6 → 7 → 8 → 9 → 10 → 11.
 Task 11은 dev build/에셋 확보 전까지 보류 가능하며, Task 1~10으로 Expo Go MVP가 완성된다.
+Task 12(부채꼴 + 전환 애니메이션)는 Task 7~9 완료를 전제로 하는 후속 개선이며 Expo Go에서 검증 가능(Rive 무관).
