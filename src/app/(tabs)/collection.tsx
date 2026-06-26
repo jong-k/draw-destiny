@@ -2,6 +2,8 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 
+import { Screen } from "@/components/Screen";
+import { SPACING } from "@/constants/theme";
 import seedDecks from "@/data/seed-decks.json";
 import { loadCollection } from "@/lib/collection";
 import type { Card, Deck } from "@/types/deck";
@@ -24,7 +26,7 @@ export default function CollectionScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <Screen style={styles.content}>
       <Text style={styles.title}>
         컬렉션 {owned.length}/{ALL_CARDS.length}
       </Text>
@@ -55,12 +57,12 @@ export default function CollectionScreen() {
           );
         }}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0E0B1A", paddingTop: 16 },
+  content: { paddingTop: SPACING.screenTop },
   title: {
     color: "#F4EAD5",
     fontSize: 20,

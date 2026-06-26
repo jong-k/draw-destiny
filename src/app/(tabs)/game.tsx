@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { CardCarousel } from "@/components/CardCarousel";
 import { DrawnCard } from "@/components/DrawnCard";
 import { QuestionPicker } from "@/components/QuestionPicker";
+import { Screen } from "@/components/Screen";
 import seedDecks from "@/data/seed-decks.json";
 import { addToCollection } from "@/lib/collection";
 import { shuffle } from "@/lib/deck";
@@ -27,7 +28,7 @@ export default function GameScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <Screen>
       <QuestionPicker
         decks={DECKS}
         selectedId={selectedDeckId}
@@ -48,12 +49,11 @@ export default function GameScreen() {
       {drawnCard && (
         <DrawnCard card={drawnCard} onClose={() => setDrawnCard(null)} />
       )}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0E0B1A" },
   body: { flex: 1, alignItems: "center", justifyContent: "center" },
   text: {
     color: "#F4EAD5",

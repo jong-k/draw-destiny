@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { SPACING } from "@/constants/theme";
 import type { Deck } from "@/types/deck";
 
 interface Props {
@@ -60,7 +61,7 @@ export function QuestionPicker({ decks, selectedId, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 20, paddingTop: 16 },
+  wrap: { paddingHorizontal: SPACING.gutter, paddingTop: SPACING.screenTop },
   trigger: {
     flexDirection: "row",
     justifyContent: "space-between",
